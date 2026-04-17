@@ -37,6 +37,7 @@ load_env() {
     MODEL_ID="${MODEL_ID:-$DEFAULT_MODEL_ID}"
     RECIPE="${RECIPE:-$DEFAULT_RECIPE}"
     VLLM_PORT="${VLLM_PORT:-8000}"
+    GEMMA4_REASONING_MODE="${GEMMA4_REASONING_MODE:-auto}"
     BENCHMARK_RUNS="${BENCHMARK_RUNS:-2}"
     BENCHMARK_MAX_TOKENS="${BENCHMARK_MAX_TOKENS:-256}"
     BENCHMARK_LARGE_TARGET_TOKENS="${BENCHMARK_LARGE_TARGET_TOKENS:-240000}"
@@ -83,4 +84,20 @@ show_target() {
     log "Remote repo: $REMOTE_REPO_DIR"
     log "Model: $MODEL_ID"
     log "Recipe: $RECIPE"
+}
+
+recipe_extra_args() {
+    case "$GEMMA4_REASONING_MODE" in
+        auto)
+            ;;
+        on)
+            printf -- " -- --default-chat-template-kwargs '{\"enable_thinking\": true}'"
+            ;;
+        off)
+            printf -- " -- --default-chat-template-kwargs '{\"enable_thinking\": false}'"
+            ;;
+        *)
+            die "GEMMA4_REASONING_MODE must be one of: auto, on, off"
+            ;;
+    esac
 }

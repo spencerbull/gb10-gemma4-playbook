@@ -9,6 +9,7 @@ This repo wraps the underlying `spark-vllm-docker` deployment code as a git subm
 - Single-node only.
 - Full `262144` token context length.
 - NVFP4 checkpoint with the required Gemma4 loader patch.
+- Gemma4 tool-calling patch and reasoning parser enabled.
 - Reproducible benchmark report generation in Markdown.
 
 This playbook intentionally does not deploy a two-node GB10 topology for this model. A 26B NVFP4 MoE model does not materially benefit from that topology for this use case, and the current distributed NVFP4 MoE backends fail on GB10.
@@ -63,6 +64,18 @@ TARGET_HOST=<your-gb10-hostname-or-ip>
 TARGET_USER=dell
 ```
 
+Optional: choose the server-wide default reasoning mode:
+
+```bash
+GEMMA4_REASONING_MODE=auto
+```
+
+Allowed values:
+
+- `auto`: keep the model default
+- `on`: default all requests to `enable_thinking=true`
+- `off`: default all requests to `enable_thinking=false`
+
 Run the full bootstrap:
 
 ```bash
@@ -110,6 +123,70 @@ make benchmark
 make stop
 ```
 
+## Tool Calling And Reasoning
+
+The bundled Gemma4 NVFP4 recipe starts vLLM with:
+
+- `mods/fix-gemma4-tool-parser`
+- `mods/fix-gemma4-nvfp4`
+- `--enable-auto-tool-choice`
+- `--tool-call-parser gemma4`
+- `--reasoning-parser gemma4`
+
+That means the server is ready for both:
+
+- OpenAI-style tool calling
+- Gemma4 reasoning extraction via the `reasoning` field in chat completions
+
+### Request-Level Reasoning Modes
+
+You can control reasoning per request with `chat_template_kwargs.enable_thinking`:
+
+Reasoning on:
+
+```json
+{
+  "chat_template_kwargs": {
+    "enable_thinking": true
+  }
+}
+```
+
+Reasoning off:
+
+```json
+{
+  "chat_template_kwargs": {
+    "enable_thinking": false
+  }
+}
+```
+
+If you are using the OpenAI Python client, pass the same object through `extra_body={...}` because that client lifts it into the top-level request body for you.
+
+If you want a server-wide default instead, set `GEMMA4_REASONING_MODE=on` or `off` in `.env` before running `bootstrap.sh` or `start.sh`.
+
+### Example Clients
+
+Reasoning mode demo:
+
+```bash
+python3 examples/reasoning_modes.py --api-base http://<host>:8000 --mode on --max-tokens 512
+python3 examples/reasoning_modes.py --api-base http://<host>:8000 --mode off
+```
+
+If you want to cap the reasoning channel explicitly, set a thinking budget:
+
+```bash
+python3 examples/reasoning_modes.py --api-base http://<host>:8000 --mode on --thinking-token-budget 128
+```
+
+Tool-calling demo:
+
+```bash
+python3 examples/tool_call_demo.py --api-base http://<host>:8000
+```
+
 ## Reference Performance
 
 Observed on a single GB10 with the bundled benchmark script and `256` completion tokens:
@@ -132,12 +209,14 @@ Notes:
 ├── .env.example
 ├── Makefile
 ├── README.md
+├── examples/
 ├── reports/
 ├── scripts/
 └── spark-vllm-docker/
 ```
 
 - `scripts/` contains the customer-facing wrapper commands.
+- `examples/` contains request examples for tool calling and reasoning modes.
 - `spark-vllm-docker/` is a pinned submodule to the deployment code fork.
 - `reports/` is where benchmark Markdown files are written locally.
 

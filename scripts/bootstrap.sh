@@ -51,7 +51,8 @@ fi
 if [ "$SKIP_START" -eq 0 ]; then
     log "Launching the single-node Gemma4 recipe"
     remote_bash "cd '$REMOTE_REPO_DIR' && ./launch-cluster.sh --solo stop || true"
-    remote_bash "cd '$REMOTE_REPO_DIR' && ./run-recipe.sh '$RECIPE' --solo -d"
+    EXTRA_ARGS="$(recipe_extra_args)"
+    remote_bash "cd '$REMOTE_REPO_DIR' && ./run-recipe.sh '$RECIPE' --solo -d$EXTRA_ARGS"
 
     log "Waiting for the API to become healthy"
     wait_for_api 60 10 || die "The vLLM API did not become healthy in time"
