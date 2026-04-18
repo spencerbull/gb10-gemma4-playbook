@@ -33,7 +33,21 @@ load_env() {
 
     TARGET_USER="${TARGET_USER:-dell}"
     TARGET_PORT="${TARGET_PORT:-22}"
-    REMOTE_REPO_DIR="${REMOTE_REPO_DIR:-/home/$TARGET_USER/src/github.com/spencerbull/spark-vllm-docker}"
+    if [ -n "${REMOTE_PLAYBOOK_DIR:-}" ]; then
+        REMOTE_PLAYBOOK_DIR="$REMOTE_PLAYBOOK_DIR"
+    elif [ -n "${REMOTE_REPO_DIR:-}" ]; then
+        case "$REMOTE_REPO_DIR" in
+            */spark-vllm-docker)
+                REMOTE_PLAYBOOK_DIR="${REMOTE_REPO_DIR%/spark-vllm-docker}/gb10-gemma4-playbook"
+                ;;
+            *)
+                REMOTE_PLAYBOOK_DIR="$REMOTE_REPO_DIR"
+                ;;
+        esac
+    else
+        REMOTE_PLAYBOOK_DIR="/home/$TARGET_USER/src/github.com/spencerbull/gb10-gemma4-playbook"
+    fi
+    REMOTE_SPARK_DIR="$REMOTE_PLAYBOOK_DIR/spark-vllm-docker"
     MODEL_ID="${MODEL_ID:-$DEFAULT_MODEL_ID}"
     RECIPE="${RECIPE:-$DEFAULT_RECIPE}"
     VLLM_PORT="${VLLM_PORT:-8000}"
@@ -54,16 +68,18 @@ remote_bash() {
     ssh -p "$TARGET_PORT" -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$SSH_TARGET" "bash -lc $escaped"
 }
 
-sync_submodule() {
-    log "Syncing spark-vllm-docker to $SSH_TARGET:$REMOTE_REPO_DIR"
-    remote_bash "mkdir -p '$REMOTE_REPO_DIR'"
+sync_playbook() {
+    log "Syncing gb10-gemma4-playbook to $SSH_TARGET:$REMOTE_PLAYBOOK_DIR"
+    remote_bash "mkdir -p '$REMOTE_PLAYBOOK_DIR'"
     rsync -az --delete \
         --exclude '.git' \
         --exclude '.pytest_cache' \
         --exclude '__pycache__' \
         --exclude '.venv' \
+        --exclude '.env' \
+        --exclude 'reports/*.md' \
         --exclude 'benchmarks/*.md' \
-        "$SUBMODULE_DIR/" "$SSH_TARGET:$REMOTE_REPO_DIR/"
+        "$PLAYBOOK_ROOT/" "$SSH_TARGET:$REMOTE_PLAYBOOK_DIR/"
 }
 
 wait_for_api() {
@@ -81,7 +97,8 @@ wait_for_api() {
 
 show_target() {
     log "Target host: $SSH_TARGET"
-    log "Remote repo: $REMOTE_REPO_DIR"
+    log "Remote playbook: $REMOTE_PLAYBOOK_DIR"
+    log "Remote spark repo: $REMOTE_SPARK_DIR"
     log "Model: $MODEL_ID"
     log "Recipe: $RECIPE"
 }

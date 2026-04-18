@@ -16,15 +16,16 @@ This playbook intentionally does not deploy a two-node GB10 topology for this mo
 
 ## What The Bootstrap Does
 
-`./scripts/bootstrap.sh` performs the full first-time setup on the target GB10:
+`./bootstrap.sh` performs the full first-time setup on the target GB10:
 
 1. Verifies SSH access to the target host.
-2. Syncs the pinned `spark-vllm-docker` submodule to the target host.
-3. Installs `uv` on the target host if it is missing.
-4. Builds the `vllm-node-tf5` image.
-5. Downloads `bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4A16`.
-6. Launches the single-node `gemma4-26b-a4b-nvfp4a16` recipe.
-7. Waits for the OpenAI-compatible API to report healthy.
+2. Syncs this full `gb10-gemma4-playbook` repo to the target host.
+3. Uses the pinned `spark-vllm-docker` submodule inside that remote playbook checkout.
+4. Installs `uv` on the target host if it is missing.
+5. Builds the `vllm-node-tf5` image.
+6. Downloads `bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4A16`.
+7. Launches the single-node `gemma4-26b-a4b-nvfp4a16` recipe.
+8. Waits for the OpenAI-compatible API to report healthy.
 
 ## Prerequisites
 
@@ -63,6 +64,12 @@ Edit `.env` and set at least:
 ```bash
 TARGET_HOST=<your-gb10-hostname-or-ip>
 TARGET_USER=dell
+```
+
+Optional: change where the full playbook repo is synced on the remote host:
+
+```bash
+REMOTE_PLAYBOOK_DIR=/home/dell/src/github.com/spencerbull/gb10-gemma4-playbook
 ```
 
 Optional: choose the server-wide default thinking mode:

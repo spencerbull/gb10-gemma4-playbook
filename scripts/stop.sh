@@ -10,4 +10,4 @@ require_local_commands ssh
 show_target
 
 log "Stopping the single-node vLLM container"
-remote_bash "cd '$REMOTE_REPO_DIR' && ./launch-cluster.sh --solo stop || true"
+remote_bash "cd '$REMOTE_SPARK_DIR' && ./launch-cluster.sh --solo stop || true"
