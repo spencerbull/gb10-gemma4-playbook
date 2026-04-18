@@ -31,7 +31,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 load_env
-require_local_commands ssh rsync
+require_target_transport_commands
 
 RUNS="${RUNS_OVERRIDE:-$BENCHMARK_RUNS}"
 MAX_TOKENS="${MAX_TOKENS_OVERRIDE:-$BENCHMARK_MAX_TOKENS}"
@@ -40,17 +40,17 @@ LARGE_TARGET_TOKENS="${LARGE_TARGET_OVERRIDE:-$BENCHMARK_LARGE_TARGET_TOKENS}"
 show_target
 sync_playbook
 
-REMOTE_REPORT_DIR="$REMOTE_PLAYBOOK_DIR/reports"
-REMOTE_REPORT="$REMOTE_REPORT_DIR/gemma4-26b-a4b-it-nvfp4a16-metrics.md"
+TARGET_REPORT_DIR="$TARGET_PLAYBOOK_DIR/reports"
+TARGET_REPORT="$TARGET_REPORT_DIR/gemma4-26b-a4b-it-nvfp4a16-metrics.md"
 
 log "Running the benchmark on the target"
-remote_bash "mkdir -p '$REMOTE_REPORT_DIR' && cd '$REMOTE_SPARK_DIR' && python3 benchmarks/chat_completion_benchmark.py --api-base http://127.0.0.1:$VLLM_PORT --runs '$RUNS' --max-tokens '$MAX_TOKENS' --large-target-tokens '$LARGE_TARGET_TOKENS' --output '$REMOTE_REPORT'"
+target_bash "mkdir -p '$TARGET_REPORT_DIR' && cd '$TARGET_SPARK_DIR' && python3 benchmarks/chat_completion_benchmark.py --api-base http://127.0.0.1:$VLLM_PORT --runs '$RUNS' --max-tokens '$MAX_TOKENS' --large-target-tokens '$LARGE_TARGET_TOKENS' --output '$TARGET_REPORT'"
 
 SAFE_HOST="${TARGET_HOST//[^A-Za-z0-9._-]/-}"
 STAMP="$(date -u +'%Y%m%d-%H%M%S')"
 LOCAL_REPORT="$REPORTS_DIR/${STAMP}-${SAFE_HOST}-gemma4-26b-a4b-it-nvfp4a16-metrics.md"
 
-rsync -az "$SSH_TARGET:$REMOTE_REPORT" "$LOCAL_REPORT"
+copy_from_target "$TARGET_REPORT" "$LOCAL_REPORT"
 cp "$LOCAL_REPORT" "$REPORTS_DIR/latest.md"
 
 log "Benchmark report saved to $LOCAL_REPORT"

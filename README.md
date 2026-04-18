@@ -19,13 +19,14 @@ This playbook intentionally does not deploy a two-node GB10 topology for this mo
 `./bootstrap.sh` performs the full first-time setup on the target GB10:
 
 1. Verifies SSH access to the target host.
-2. Syncs this full `gb10-gemma4-playbook` repo to the target host.
-3. Uses the pinned `spark-vllm-docker` submodule inside that remote playbook checkout.
-4. Installs `uv` on the target host if it is missing.
-5. Builds the `vllm-node-tf5` image.
-6. Downloads `bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4A16`.
-7. Launches the single-node `gemma4-26b-a4b-nvfp4a16` recipe.
-8. Waits for the OpenAI-compatible API to report healthy.
+2. If run from another machine, syncs this full `gb10-gemma4-playbook` repo to the target host.
+3. If run on the Spark itself, works directly from the local checkout with no self-SSH.
+4. Uses the pinned `spark-vllm-docker` submodule inside that target playbook checkout.
+5. Installs `uv` on the target host if it is missing.
+6. Builds the `vllm-node-tf5` image.
+7. Downloads `bg-digitalservices/Gemma-4-26B-A4B-it-NVFP4A16`.
+8. Launches the single-node `gemma4-26b-a4b-nvfp4a16` recipe.
+9. Waits for the OpenAI-compatible API to report healthy.
 
 ## Prerequisites
 
@@ -66,11 +67,13 @@ TARGET_HOST=<your-gb10-hostname-or-ip>
 TARGET_USER=dell
 ```
 
-Optional: change where the full playbook repo is synced on the remote host:
+Optional: change where the playbook repo lives on the target machine:
 
 ```bash
-REMOTE_PLAYBOOK_DIR=/home/dell/src/github.com/spencerbull/gb10-gemma4-playbook
+TARGET_PLAYBOOK_DIR=/home/dell/src/github.com/spencerbull/gb10-gemma4-playbook
 ```
+
+If you run the playbook directly on the Spark, set `TARGET_HOST=127.0.0.1` or `localhost` and the scripts will execute in-place instead of SSHing back into the same machine.
 
 Optional: choose the server-wide default thinking mode:
 

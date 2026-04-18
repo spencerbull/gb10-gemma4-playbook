@@ -6,8 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
 load_env
-require_local_commands ssh
+require_target_transport_commands
 show_target
 
 log "Stopping the single-node vLLM container"
-remote_bash "cd '$REMOTE_SPARK_DIR' && ./launch-cluster.sh --solo stop || true"
+target_bash "cd '$TARGET_SPARK_DIR' && ./launch-cluster.sh --solo stop || true"
