@@ -69,9 +69,19 @@ remote_bash() {
 }
 
 sync_playbook() {
+    if [ "$PLAYBOOK_ROOT" = "$REMOTE_PLAYBOOK_DIR" ]; then
+        case "$TARGET_HOST" in
+            127.0.0.1|localhost)
+                log "Playbook is already running from the target checkout; skipping sync"
+                return 0
+                ;;
+        esac
+    fi
+
     log "Syncing gb10-gemma4-playbook to $SSH_TARGET:$REMOTE_PLAYBOOK_DIR"
     remote_bash "mkdir -p '$REMOTE_PLAYBOOK_DIR'"
     rsync -az --delete \
+        --filter='P .git' \
         --exclude '.git' \
         --exclude '.pytest_cache' \
         --exclude '__pycache__' \
