@@ -128,12 +128,8 @@ wait_for_api() {
     local sleep_seconds="${2:-10}"
     local i
     local success_count=0
-    local container_id
     for i in $(seq 1 "$attempts"); do
-        container_id="$(target_bash "docker ps --filter name=^/vllm_node$ --format '{{.ID}}'")"
-        if [ -n "$container_id" ] \
-            && target_bash "docker logs '$container_id' 2>&1 | grep -q 'Uvicorn running on'" \
-            && target_bash "curl -sf http://127.0.0.1:$VLLM_PORT/v1/models >/dev/null"; then
+        if target_bash "curl -sf http://127.0.0.1:$VLLM_PORT/v1/models >/dev/null"; then
             success_count=$((success_count + 1))
             if [ "$success_count" -ge 3 ]; then
                 return 0
