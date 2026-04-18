@@ -2,7 +2,8 @@
 
 import argparse
 import json
-from urllib import request
+
+from openai import OpenAI
 
 
 def chat(
@@ -12,32 +13,28 @@ def chat(
     max_tokens: int,
     thinking_token_budget: int | None,
 ) -> dict:
-    payload = {
-        "model": model,
-        "messages": [
+    client = OpenAI(base_url=f"{api_base.rstrip('/')}/v1", api_key="dummy")
+
+    extra_body = {}
+    if thinking is not None:
+        extra_body["chat_template_kwargs"] = {"enable_thinking": thinking}
+
+    if thinking_token_budget is not None:
+        extra_body["thinking_token_budget"] = thinking_token_budget
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
             {
                 "role": "user",
                 "content": "Solve 17 * 23. Give the final numeric answer clearly.",
             }
         ],
-        "temperature": 0,
-        "max_tokens": max_tokens,
-    }
-
-    if thinking is not None:
-        payload["chat_template_kwargs"] = {"enable_thinking": thinking}
-
-    if thinking_token_budget is not None:
-        payload["thinking_token_budget"] = thinking_token_budget
-
-    req = request.Request(
-        f"{api_base.rstrip('/')}/v1/chat/completions",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
+        temperature=0,
+        max_tokens=max_tokens,
+        extra_body=extra_body or None,
     )
-    with request.urlopen(req, timeout=300) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    return response.model_dump(exclude_none=True)
 
 
 def main() -> int:

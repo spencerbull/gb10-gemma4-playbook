@@ -34,7 +34,8 @@ On the operator machine:
 - `ssh`
 - `rsync`
 - `curl`
-- `python3`
+- `python3` for optional example clients
+- `uv` for the local example virtual environment
 
 On the target GB10:
 
@@ -79,25 +80,25 @@ Allowed values:
 Run the full bootstrap:
 
 ```bash
-./scripts/bootstrap.sh
+./bootstrap.sh
 ```
 
 Verify the service:
 
 ```bash
-./scripts/status.sh
+./status.sh
 ```
 
 Run the benchmark suite and pull the Markdown report back locally:
 
 ```bash
-./scripts/benchmark.sh
+./benchmark.sh
 ```
 
 Stop the service when you are done:
 
 ```bash
-./scripts/stop.sh
+./stop.sh
 ```
 
 ## Day 2 Operations
@@ -105,13 +106,13 @@ Stop the service when you are done:
 Restart the model without rebuilding or redownloading:
 
 ```bash
-./scripts/start.sh
+./start.sh
 ```
 
 Rerun bootstrap but skip the expensive steps:
 
 ```bash
-./scripts/bootstrap.sh --skip-build --skip-download
+./bootstrap.sh --skip-build --skip-download
 ```
 
 Use the `Makefile` if you prefer shorter commands:
@@ -121,6 +122,16 @@ make bootstrap
 make status
 make benchmark
 make stop
+```
+
+Top-level bash wrappers are also provided for the main operations:
+
+```bash
+./bootstrap.sh
+./start.sh
+./status.sh
+./benchmark.sh
+./stop.sh
 ```
 
 ## Tool Calling And Reasoning
@@ -176,23 +187,31 @@ This is optional and only useful if you want to keep long reasoning traces from 
 
 ### Example Clients
 
+The example clients use the OpenAI Python SDK:
+
+```bash
+./setup-python.sh
+```
+
+These examples intentionally use the SDK because the service is OpenAI-compatible and that is the client most customers will integrate with. The benchmark utility still uses raw HTTP because it also depends on vLLM's non-OpenAI `/tokenize` endpoint and measures lower-level streaming details directly.
+
 Thinking toggle demo:
 
 ```bash
-python3 examples/thinking_demo.py --api-base http://<host>:8000 --thinking on --max-tokens 512
-python3 examples/thinking_demo.py --api-base http://<host>:8000 --thinking off
+./thinking-demo.sh --api-base http://<host>:8000 --thinking on --max-tokens 512
+./thinking-demo.sh --api-base http://<host>:8000 --thinking off
 ```
 
 If you want to cap the reasoning channel explicitly, set a thinking budget:
 
 ```bash
-python3 examples/thinking_demo.py --api-base http://<host>:8000 --thinking on --thinking-token-budget 128
+./thinking-demo.sh --api-base http://<host>:8000 --thinking on --thinking-token-budget 128
 ```
 
 Tool-calling demo:
 
 ```bash
-python3 examples/tool_call_demo.py --api-base http://<host>:8000
+./tool-call-demo.sh --api-base http://<host>:8000
 ```
 
 ## Reference Performance
@@ -217,13 +236,22 @@ Notes:
 ├── .env.example
 ├── Makefile
 ├── README.md
+├── benchmark.sh
+├── bootstrap.sh
 ├── examples/
 ├── reports/
 ├── scripts/
+├── setup-python.sh
+├── start.sh
+├── status.sh
+├── stop.sh
+├── thinking-demo.sh
+├── tool-call-demo.sh
 └── spark-vllm-docker/
 ```
 
-- `scripts/` contains the customer-facing wrapper commands.
+- top-level `*.sh` files are the main customer entrypoints.
+- `scripts/` contains the implementation behind those wrappers.
 - `examples/` contains request examples for tool calling and Gemma4 thinking control.
 - `spark-vllm-docker/` is a pinned submodule to the deployment code fork.
 - `reports/` is where benchmark Markdown files are written locally.

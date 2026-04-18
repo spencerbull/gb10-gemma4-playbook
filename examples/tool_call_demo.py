@@ -2,7 +2,8 @@
 
 import argparse
 import json
-from urllib import request
+
+from openai import OpenAI
 
 
 TOOLS = [
@@ -28,28 +29,21 @@ TOOLS = [
 
 
 def chat(api_base: str, model: str) -> dict:
-    payload = {
-        "model": model,
-        "messages": [
+    client = OpenAI(base_url=f"{api_base.rstrip('/')}/v1", api_key="dummy")
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
             {
                 "role": "user",
                 "content": "What is the weather in Austin, Texas? Use the tool if needed.",
             }
         ],
-        "tools": TOOLS,
-        "tool_choice": "auto",
-        "temperature": 0,
-        "max_tokens": 256,
-    }
-
-    req = request.Request(
-        f"{api_base.rstrip('/')}/v1/chat/completions",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
+        tools=TOOLS,
+        tool_choice="auto",
+        temperature=0,
+        max_tokens=256,
     )
-    with request.urlopen(req, timeout=300) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    return response.model_dump(exclude_none=True)
 
 
 def main() -> int:
