@@ -147,7 +147,7 @@ wait_for_api() {
 }
 
 wait_for_api_down() {
-    local attempts="${1:-30}"
+    local attempts="${1:-90}"
     local sleep_seconds="${2:-2}"
     local i
     for i in $(seq 1 "$attempts"); do
