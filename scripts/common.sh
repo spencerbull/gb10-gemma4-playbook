@@ -146,6 +146,19 @@ wait_for_api() {
     return 1
 }
 
+wait_for_api_down() {
+    local attempts="${1:-30}"
+    local sleep_seconds="${2:-2}"
+    local i
+    for i in $(seq 1 "$attempts"); do
+        if ! target_bash "curl -sf http://127.0.0.1:$VLLM_PORT/v1/models >/dev/null"; then
+            return 0
+        fi
+        sleep "$sleep_seconds"
+    done
+    return 1
+}
+
 show_target() {
     log "Target host: $TARGET_SSH"
     log "Target playbook: $TARGET_PLAYBOOK_DIR"

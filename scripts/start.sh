@@ -12,6 +12,7 @@ sync_playbook
 
 log "Restarting the single-node Gemma4 recipe"
 target_bash "cd '$TARGET_SPARK_DIR' && ./launch-cluster.sh --solo stop || true"
+wait_for_api_down 30 2 || die "The previous vLLM API instance did not shut down in time"
 EXTRA_ARGS="$(recipe_extra_args)"
 target_bash "cd '$TARGET_SPARK_DIR' && ./run-recipe.sh '$RECIPE' --solo -d$EXTRA_ARGS"
 
