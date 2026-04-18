@@ -12,7 +12,7 @@ def chat(
     thinking: bool | None,
     max_tokens: int,
     thinking_token_budget: int | None,
-) -> dict:
+):
     client = OpenAI(base_url=f"{api_base.rstrip('/')}/v1", api_key="dummy")
 
     extra_body = {}
@@ -34,7 +34,7 @@ def chat(
         max_tokens=max_tokens,
         extra_body=extra_body or None,
     )
-    return response.model_dump(exclude_none=True)
+    return response
 
 
 def main() -> int:
@@ -58,21 +58,18 @@ def main() -> int:
     args = parser.parse_args()
 
     thinking = {"auto": None, "on": True, "off": False}[args.thinking]
-    response = chat(
+    completion = chat(
         args.api_base,
         args.model,
         thinking,
         args.max_tokens,
         args.thinking_token_budget,
     )
-    message = response["choices"][0]["message"]
+    message = completion.choices[0].message
 
     print("thinking:", args.thinking)
-    print(
-        "reasoning:",
-        json.dumps(message.get("reasoning"), ensure_ascii=False, indent=2),
-    )
-    print("content:", json.dumps(message.get("content"), ensure_ascii=False, indent=2))
+    print("reasoning:", json.dumps(message.reasoning, ensure_ascii=False, indent=2))
+    print("content:", json.dumps(message.content, ensure_ascii=False, indent=2))
     return 0
 
 

@@ -193,7 +193,7 @@ The example clients use the OpenAI Python SDK:
 ./setup-python.sh
 ```
 
-These examples intentionally use the SDK because the service is OpenAI-compatible and that is the client most customers will integrate with. The benchmark utility still uses raw HTTP because it also depends on vLLM's non-OpenAI `/tokenize` endpoint and measures lower-level streaming details directly.
+These examples intentionally use the SDK because the service is OpenAI-compatible and that is the client most customers will integrate with. They keep the response as an OpenAI SDK object all the way through the example instead of dropping back to raw HTTP payloads. The benchmark utility still uses raw HTTP because it also depends on vLLM's non-OpenAI `/tokenize` endpoint and measures lower-level streaming details directly.
 
 Thinking toggle demo:
 

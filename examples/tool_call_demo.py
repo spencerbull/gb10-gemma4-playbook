@@ -28,7 +28,7 @@ TOOLS = [
 ]
 
 
-def chat(api_base: str, model: str) -> dict:
+def chat(api_base: str, model: str):
     client = OpenAI(base_url=f"{api_base.rstrip('/')}/v1", api_key="dummy")
     response = client.chat.completions.create(
         model=model,
@@ -43,7 +43,7 @@ def chat(api_base: str, model: str) -> dict:
         temperature=0,
         max_tokens=256,
     )
-    return response.model_dump(exclude_none=True)
+    return response
 
 
 def main() -> int:
@@ -52,9 +52,15 @@ def main() -> int:
     parser.add_argument("--model", default="gemma-4-26b-a4b-it-nvfp4a16")
     args = parser.parse_args()
 
-    response = chat(args.api_base, args.model)
-    message = response["choices"][0]["message"]
-    print(json.dumps(message, ensure_ascii=False, indent=2))
+    completion = chat(args.api_base, args.model)
+    message = completion.choices[0].message
+    payload = {
+        "role": message.role,
+        "content": message.content,
+        "reasoning": getattr(message, "reasoning", None),
+        "tool_calls": [tc.model_dump(exclude_none=True) for tc in (message.tool_calls or [])],
+    }
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
     return 0
 
 
