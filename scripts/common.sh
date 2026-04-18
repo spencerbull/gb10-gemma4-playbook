@@ -75,7 +75,7 @@ target_bash() {
     local cmd="$1"
     if [ "$TARGET_IS_LOCAL" = "1" ]; then
         bash -lc "$cmd"
-        return 0
+        return $?
     fi
 
     local escaped
