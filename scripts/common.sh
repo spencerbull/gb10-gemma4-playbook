@@ -37,7 +37,7 @@ load_env() {
     MODEL_ID="${MODEL_ID:-$DEFAULT_MODEL_ID}"
     RECIPE="${RECIPE:-$DEFAULT_RECIPE}"
     VLLM_PORT="${VLLM_PORT:-8000}"
-    GEMMA4_REASONING_MODE="${GEMMA4_REASONING_MODE:-auto}"
+    GEMMA4_THINKING_DEFAULT="${GEMMA4_THINKING_DEFAULT:-auto}"
     BENCHMARK_RUNS="${BENCHMARK_RUNS:-2}"
     BENCHMARK_MAX_TOKENS="${BENCHMARK_MAX_TOKENS:-256}"
     BENCHMARK_LARGE_TARGET_TOKENS="${BENCHMARK_LARGE_TARGET_TOKENS:-240000}"
@@ -87,7 +87,7 @@ show_target() {
 }
 
 recipe_extra_args() {
-    case "$GEMMA4_REASONING_MODE" in
+    case "$GEMMA4_THINKING_DEFAULT" in
         auto)
             ;;
         on)
@@ -97,7 +97,7 @@ recipe_extra_args() {
             printf -- " -- --default-chat-template-kwargs '{\"enable_thinking\": false}'"
             ;;
         *)
-            die "GEMMA4_REASONING_MODE must be one of: auto, on, off"
+            die "GEMMA4_THINKING_DEFAULT must be one of: auto, on, off"
             ;;
     esac
 }

@@ -64,10 +64,10 @@ TARGET_HOST=<your-gb10-hostname-or-ip>
 TARGET_USER=dell
 ```
 
-Optional: choose the server-wide default reasoning mode:
+Optional: choose the server-wide default thinking mode:
 
 ```bash
-GEMMA4_REASONING_MODE=auto
+GEMMA4_THINKING_DEFAULT=auto
 ```
 
 Allowed values:
@@ -138,9 +138,11 @@ That means the server is ready for both:
 - OpenAI-style tool calling
 - Gemma4 reasoning extraction via the `reasoning` field in chat completions
 
-### Request-Level Reasoning Modes
+### Native Gemma4 Thinking Control
 
-You can control reasoning per request with `chat_template_kwargs.enable_thinking`:
+For this checkpoint, the native Gemma4 chat template exposes a boolean `enable_thinking` control. I did not find low/medium/high reasoning levels in the shipped chat template or tokenizer config for this model.
+
+You can control thinking per request with `chat_template_kwargs.enable_thinking`:
 
 Reasoning on:
 
@@ -164,21 +166,27 @@ Reasoning off:
 
 If you are using the OpenAI Python client, pass the same object through `extra_body={...}` because that client lifts it into the top-level request body for you.
 
-If you want a server-wide default instead, set `GEMMA4_REASONING_MODE=on` or `off` in `.env` before running `bootstrap.sh` or `start.sh`.
+If you want a server-wide default instead, set `GEMMA4_THINKING_DEFAULT=on` or `off` in `.env` before running `bootstrap.sh` or `start.sh`.
+
+### Optional vLLM Thinking Budget
+
+`thinking_token_budget` is not a Gemma4-native reasoning level. It is a generic vLLM control that can cap how many tokens the model spends in the reasoning channel before it is forced to answer.
+
+This is optional and only useful if you want to keep long reasoning traces from consuming the entire response budget.
 
 ### Example Clients
 
-Reasoning mode demo:
+Thinking toggle demo:
 
 ```bash
-python3 examples/reasoning_modes.py --api-base http://<host>:8000 --mode on --max-tokens 512
-python3 examples/reasoning_modes.py --api-base http://<host>:8000 --mode off
+python3 examples/thinking_demo.py --api-base http://<host>:8000 --thinking on --max-tokens 512
+python3 examples/thinking_demo.py --api-base http://<host>:8000 --thinking off
 ```
 
 If you want to cap the reasoning channel explicitly, set a thinking budget:
 
 ```bash
-python3 examples/reasoning_modes.py --api-base http://<host>:8000 --mode on --thinking-token-budget 128
+python3 examples/thinking_demo.py --api-base http://<host>:8000 --thinking on --thinking-token-budget 128
 ```
 
 Tool-calling demo:
@@ -216,7 +224,7 @@ Notes:
 ```
 
 - `scripts/` contains the customer-facing wrapper commands.
-- `examples/` contains request examples for tool calling and reasoning modes.
+- `examples/` contains request examples for tool calling and Gemma4 thinking control.
 - `spark-vllm-docker/` is a pinned submodule to the deployment code fork.
 - `reports/` is where benchmark Markdown files are written locally.
 
