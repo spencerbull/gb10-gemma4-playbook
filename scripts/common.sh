@@ -128,8 +128,10 @@ wait_for_api() {
     local sleep_seconds="${2:-10}"
     local i
     for i in $(seq 1 "$attempts"); do
-        if target_bash "curl -sf http://127.0.0.1:$VLLM_PORT/v1/models >/dev/null"; then
-            return 0
+        if target_bash "docker logs vllm_node 2>&1 | grep -q 'Uvicorn running on'"; then
+            if target_bash "curl -sf http://127.0.0.1:$VLLM_PORT/v1/models >/dev/null"; then
+                return 0
+            fi
         fi
         sleep "$sleep_seconds"
     done
